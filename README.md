@@ -1,128 +1,69 @@
-# Genesys Cloud CX – Voice Security Firewall and Spam Call Blocking
+# Genesys Cloud CX – Voice Security Firewall and Spam Call Blocking System
+
+![Genesys Cloud](https://img.shields.io/badge/Platform-Genesys%20Cloud%20CX-blue)
+![Architect](https://img.shields.io/badge/Tool-Genesys%20Architect-orange)
+![API](https://img.shields.io/badge/Integration-REST%20API-green)
+![Postman](https://img.shields.io/badge/API%20Testing-Postman-orange)
 
 ## Project Overview
 
-This project demonstrates a Genesys Cloud CX inbound voice flow integrated with a reusable Common Module to validate callers and manage spam-caller status using a Genesys Cloud Data Table and a Data Action.
+This project demonstrates a voice security solution developed using **Genesys Cloud CX Architect**, Common Modules, Data Tables, and Data Actions.
 
-The screenshots document the Architect configuration, caller-input validation, Data Table lookup, API-based row update, and inbound menu routing.
+The solution is designed to validate incoming callers, identify spam-related caller records, perform numeric challenge verification, and manage caller status through Genesys Cloud Data Tables and API integration.
 
-> **Portfolio note:** This repository is a visual project walkthrough based on configuration screenshots. It does not contain a deployable Genesys Cloud flow export or a complete implementation package.
+The implementation demonstrates reusable Architect task integration, caller input validation, conditional routing, and automated Data Table updates.
 
-## Objectives
+## Project Objectives
 
-- Look up an inbound caller's number in a Genesys Cloud Data Table.
-- Retrieve the caller's spam-related status fields.
-- Generate a numeric challenge and collect caller input.
-- Compare the caller's input with the generated challenge.
-- Limit the validation process to a configured maximum of three attempts.
-- Demonstrate a Data Action that updates a Data Table row.
-- Reuse the validation logic from an inbound Architect flow.
-- Provide inbound menu options that route callers to different ACD queues.
+- Implement caller identification using Genesys Cloud Data Tables.
+- Retrieve spam caller and suspected spam caller status.
+- Generate a random numeric verification challenge.
+- Collect and validate caller input using Architect.
+- Configure a maximum of three validation attempts.
+- Integrate Genesys Cloud Data Actions with Data Tables.
+- Update caller records through Genesys Cloud Platform API.
+- Implement reusable Common Modules in Architect.
+- Integrate the Common Module with an inbound call flow.
+- Configure menu-based ACD queue transfers.
 
-## Solution Components
+## Architecture and Solution Components
 
-| Component | Purpose shown in the screenshots |
+| Component | Description |
 |---|---|
-| Inbound Call Flow | Plays the greeting, normalizes the caller number, stores it as participant data, and invokes the reusable task. |
-| Common Module Flow | Contains the caller lookup and challenge/validation logic. |
-| Data Table Lookup | Looks up the caller using `customer_number` and returns `spam_caller_id` and `suspect_spam_caller_id`. |
-| Architect Data Actions | Calls the configured `2414_UPDATE_DATA_TABLE` action to update a Data Table row. |
-| Genesys Cloud Data Table | Stores the customer number and spam-related Boolean fields. |
-| Postman | Shows an example `PUT` request to update a Data Table row through the Genesys Cloud Platform API. |
+| Genesys Cloud Architect | Main platform for designing inbound call flows |
+| Common Module | Reusable caller validation and spam-check logic |
+| Data Table Lookup | Retrieves caller records using customer number |
+| Data Actions | Executes API-based Data Table updates |
+| Data Tables | Stores caller and spam-related information |
+| Random Number Generation | Generates the numeric verification challenge |
+| Loop | Controls the maximum number of validation attempts |
+| Postman | Tests Genesys Cloud Platform API requests |
+| Inbound Call Flow | Integrates the reusable Common Module |
 
-## High-Level Call Flow
+## Solution Workflow
 
-1. An inbound caller reaches the Architect inbound flow.
-2. The flow plays the configured greeting.
-3. The caller number is normalized by removing the `tel:` prefix and is stored for use by the reusable task.
-4. The inbound flow invokes the `SPAM_CHECK` reusable task, which calls the Common Module.
-5. The Common Module looks up the caller number in the Data Table.
-6. If a matching row is found, the flow follows the configured decision logic using the returned spam-related fields.
-7. The challenge branch generates a numeric value, prompts the caller, and collects input.
-8. The entered value is compared with the generated value. The displayed loop is configured for a maximum of three attempts.
-9. The configured success and failure branches play their respective audio and perform the associated actions.
-10. The inbound menu provides transfer options to the configured ACD queues.
-
-**Important:** The exact production behavior depends on the full Architect configuration, Data Action contract, queue settings, and published flow versions. The screenshots are illustrative evidence of the configuration, not proof of a live production deployment.
+1. An incoming call reaches the Genesys Cloud inbound call flow.
+2. The system plays the initial greeting.
+3. The caller number is normalized and stored as participant data.
+4. The inbound flow invokes the reusable `SPAM_CHECK` task.
+5. The Common Module performs a Data Table Lookup using the caller number.
+6. The system retrieves the caller's spam-related Boolean attributes.
+7. Based on the configured decision logic, the flow follows the appropriate branch.
+8. In the challenge verification branch, a random numeric value is generated.
+9. The caller is prompted to enter the verification code.
+10. Architect compares the entered value against the generated value.
+11. A maximum of three attempts is configured for the validation loop.
+12. The configured success and failure branches execute their respective actions.
+13. A Genesys Cloud Data Action demonstrates updating the caller's Data Table record.
+14. The inbound flow provides menu options for transferring callers to configured ACD queues.
 
 ## Data Table Structure
 
-The screenshots show the following columns:
+The project uses the following Data Table:
 
-| Column | Type | Description |
+`2414_MD_SPAM_DB_DATA_TABLE`
+
+| Column Name | Data Type | Description |
 |---|---|---|
-| `customer_number` | String | Caller number used as the lookup key. |
-| `spam_caller_id` | Boolean | Spam caller status. |
-| `suspect_spam_caller_id` | Boolean | Suspected spam caller status. |
-
-The Common Module Lookup input is mapped from `Common.customer_number`. The displayed lookup outputs are mapped to task variables for the two Boolean fields.
-
-## API Update Example
-
-The Postman screenshot demonstrates a `PUT` request to the Genesys Cloud Platform API endpoint for updating a Data Table row:
-
-`PUT /api/v2/flows/datatables/{datatableId}/rows/{rowId}`
-
-The example request body uses the row key and the two Boolean fields:
-
-```json
-{
-  "key": "<CUSTOMER_NUMBER>",
-  "spam_caller_id": true,
-  "suspect_spam_caller_id": false
-}
-```
-
-Replace the placeholders with values from your own test environment. Do not commit access tokens, client secrets, customer phone numbers, real customer records, or environment-specific identifiers.
-
-## Repository Contents
-
-- `Screenshots/` – screenshots of the Architect flow, Common Module, Data Table, audio prompt, and Postman request.
-
-## Technologies and Tools
-
-- Genesys Cloud CX
-- Genesys Cloud Architect
-- Architect Common Modules / reusable tasks
-- Genesys Cloud Data Tables
-- Genesys Cloud Data Actions
-- Genesys Cloud Platform API
-- Postman
-- JSON
-
-## Screenshots
-
-### Architect and Common Module
-
-1. [Data Table Lookup Configuration](Screenshots/01-Data-Table-Lookup-Configuration.png)
-2. [Common Module Update Data](Screenshots/02-Common-Module-Update-Data.png)
-3. [OTP Generation and Three-Attempt Loop](Screenshots/03-OTP-Generation-and-Three-Attempt-Loop.png)
-4. [OTP Validation and Call Data Action](Screenshots/04-OTP-Validation-and-Call-Data-Action.png)
-5. [Common Module Flow Overview](Screenshots/05-Common-Module-Flow-Overview.png)
-
-### Data and API
-
-6. [Data Table Example Row](Screenshots/06-Data-Table-Example-Row.png)
-7. [Audio Prompt Configuration](Screenshots/07-Audio-Prompt-Configuration.png)
-8. [Postman Data Table Update Request](Screenshots/12-Postman-Data-Table-Update-Request.png)
-
-### Inbound Call Flow
-
-9. [Inbound Flow Starting Task](Screenshots/08-Inbound-Flow-Starting-Task.png)
-10. [Menu Option One – Transfer](Screenshots/09-Menu-Option-One-Transfer.png)
-11. [Menu Option Two – Transfer](Screenshots/10-Menu-Option-Two-Transfer.png)
-12. [Calling the Common Module](Screenshots/11-Calling-the-Common-Module.png)
-
-## Security and Privacy
-
-Before making this repository public:
-
-- Redact customer phone numbers and any personal information from screenshots.
-- Remove organisation-specific names, division labels, tenant IDs, Data Table IDs, and other internal identifiers if they are confidential.
-- Never upload OAuth access tokens, client secrets, passwords, API keys, or production credentials.
-- Use dummy values in API examples.
-- Confirm that you are permitted to share the screenshots and configuration details.
-
-## Disclaimer
-
-This is an independently prepared portfolio presentation of Genesys Cloud CX configuration concepts. Any organisation, tenant, queue, customer, or environment names visible in source screenshots should be treated as confidential unless you have permission to disclose them. This repository is not affiliated with or endorsed by Genesys.
+| customer_number | String | Unique caller number used for lookup |
+| spam
